@@ -33,15 +33,11 @@ class MainWindow(QMainWindow):
         self.capture_template_button = QPushButton("Capture Template")
         self.start_detection_button = QPushButton("Start Detection")
         self.stop_button = QPushButton("Stop")
-        self.count_button = QPushButton("Count Object")
-        self.reset_count_button = QPushButton("Reset Count")
         self.help_button = QPushButton("Help")
 
         self.left_layout.addWidget(self.capture_template_button)
         self.left_layout.addWidget(self.start_detection_button)
         self.left_layout.addWidget(self.stop_button)
-        self.left_layout.addWidget(self.count_button)
-        self.left_layout.addWidget(self.reset_count_button)
         self.left_layout.addWidget(self.help_button)
 
         # # ROI adjustment controls
@@ -87,8 +83,6 @@ class MainWindow(QMainWindow):
         self.capture_template_button.clicked.connect(self.start_template_capture)
         self.start_detection_button.clicked.connect(self.start_detection)
         self.stop_button.clicked.connect(self.stop)
-        self.count_button.clicked.connect(self.increment_count)
-        self.reset_count_button.clicked.connect(self.reset_count)
         self.help_button.clicked.connect(self.show_help)
         self.threshold_slider.valueChanged.connect(self.update_threshold)
 
@@ -96,9 +90,6 @@ class MainWindow(QMainWindow):
         # self.roi_down_button.clicked.connect(lambda: self.adjust_roi(0, 5))
         # self.roi_left_button.clicked.connect(lambda: self.adjust_roi(-5, 0))
         # self.roi_right_button.clicked.connect(lambda: self.adjust_roi(5, 0))
-
-        self.object_count = load_count()
-        self.update_count(self.object_count)
 
         self.update_button_states()
         self.update_template_preview()
@@ -128,15 +119,6 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to stop: {str(e)}")
 
-    def increment_count(self):
-        self.object_count += 1
-        self.update_count(self.object_count)
-
-    def reset_count(self):
-        self.object_count = 0
-        self.update_count(self.object_count)
-        QMessageBox.information(self, "Count Reset", "The object count has been reset to 0.")
-
     def show_help(self):
         help_text = (
             "1. Click 'Capture Template' to select a template.\n"
@@ -144,9 +126,7 @@ class MainWindow(QMainWindow):
             "3. Click 'Start Detection' to begin object detection.\n"
             "4. Use ROI adjustment buttons to fine-tune the template position.\n"
             "5. Adjust the match threshold if needed.\n"
-            "6. Click 'Count Object' when you want to increment the count.\n"
-            "7. Click 'Stop' to end the detection process.\n"
-            "8. Use 'Reset Count' to set the count back to 0."
+            "6. Click 'Stop' to end the detection process."
         )
         QMessageBox.information(self, "Help", help_text)
 
@@ -162,8 +142,6 @@ class MainWindow(QMainWindow):
         self.capture_template_button.setEnabled(not is_detecting)
         self.start_detection_button.setEnabled(has_template and not is_detecting)
         self.stop_button.setEnabled(is_detecting)
-        self.count_button.setEnabled(is_detecting)
-        self.reset_count_button.setEnabled(True)
         
         # # Enable/disable ROI adjustment buttons
         # roi_adjustable = has_template and not is_detecting
@@ -184,17 +162,11 @@ class MainWindow(QMainWindow):
         else:
             self.template_preview.setText("No template")
 
-    def update_count(self, count):
-        self.object_count = count
-        self.count_label.setText(f"Count: {self.object_count}")
-        save_count(self.object_count)
-
     def adjust_roi(self, dx, dy):
         self.result_display.adjust_roi(dx, dy)
         self.update_template_preview()
 
     def closeEvent(self, event):
-        save_count(self.object_count)
         self.result_display.stop()
         super().closeEvent(event)
 
